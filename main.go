@@ -85,12 +85,21 @@ func getArticleByID(id uint64) (*Article, error) {
 }
 
 func (a *Article) Title() string {
-	z := strings.SplitN(a.Markdown, "#", 2)
-	if len(z) == 1 {
-		return fmt.Sprint(a.ID)
+	z := strings.Split(a.Markdown, "\n")
+	for _, s := range z {
+		if strings.HasPrefix(s, "#") {
+			return strings.TrimLeft(s, `# `)
+		}
 	}
-	z = strings.SplitN(z[1], "\n", 2)
-	return strings.TrimLeft(z[0], `# `)
+	return fmt.Sprint(a.ID)
+	/*
+		z := strings.SplitN(a.Markdown, "#", 2)
+		if len(z) == 1 {
+			return fmt.Sprint(a.ID)
+		}
+		z = strings.SplitN(z[1], "\n", 2)
+		return strings.TrimLeft(z[0], `# `)
+	*/
 }
 
 func (a *Article) ToHTML() (htpl.HTML, error) {
