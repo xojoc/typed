@@ -1,0 +1,20 @@
+{{template "header.html"}}
+
+<form method=post action="{{if .}}{{.EditPath}}{{else}}/new{{end}}">
+  <p>
+    <textarea name=newbody placeholder="Awesome article" autofocus required>{{if .}}{{.Markdown}}{{end}}</textarea>
+  </p>
+  {{if .}}
+  <p>Please enter your password to edit the article.</p>
+  {{else}}
+  <p>Set a password if you want to be able to edit the article later.</p>
+  {{end}}
+  <p>
+    <input name=newpassword type=password placeholder="Password{{if not .}} (optional){{end}}">
+  </p>
+  <p>
+    <input type=submit value={{if .}}edit{{else}}pubblish{{end}}>
+  </p>
+</form>
+
+{{template "footer.html"}}

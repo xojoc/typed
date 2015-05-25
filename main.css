@@ -1,0 +1,44 @@
+* { margin: 0; }
+body {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 0 50px;
+
+    font-family: sans-serif;
+    font-size: 16px;
+
+    background-color: #eaeaea;
+}
+h1 {
+    font-size: 22px;
+}
+h2 {
+    font-size: 18px;
+}
+img {
+    max-width: 100%;
+}
+a {
+    text-decoration: none;
+    color: green;
+    font-weight: 700;
+}
+textarea {
+    width: 100%;
+    min-height: 200px;
+}
+
+footer {
+    margin-top: 50px;
+}
+footer a {
+    margin-right: 20px;
+}
+
+#indexnew {
+    display: block;
+    text-align: center;
+    font-size: 36px;
+    margin-top: 20px;
+    background-color: #cfcfcf;
+}
