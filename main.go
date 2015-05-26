@@ -145,6 +145,7 @@ func errorHandler(h myHandler) http.HandlerFunc {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	p := r.URL.Path
+	fmt.Print(p)
 	switch {
 	case p == "/index.html" || p == "/":
 		http.Redirect(w, r, "http://typed.pw", http.StatusMovedPermanently)
