@@ -147,7 +147,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	p := r.URL.Path
 	switch {
 	case p == "/index.html" || p == "/":
-		http.Redirect(w, r, "", http.StatusMovedPermanently)
+		http.Redirect(w, r, "http://typed.pw", http.StatusMovedPermanently)
 		return nil
 	case p == "":
 		err := templates.ExecuteTemplate(w, "index.html", nil)
