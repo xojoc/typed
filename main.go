@@ -147,10 +147,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	p := r.URL.Path
 	fmt.Print(p)
 	switch {
-	case p == "/index.html" || p == "/":
-		http.Redirect(w, r, "http://typed.pw", http.StatusMovedPermanently)
+	case p == "/index.html" || p == "":
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 		return nil
-	case p == "":
+	case p == "/":
 		err := templates.ExecuteTemplate(w, "index.html", nil)
 		if err != nil {
 			return &NetError{500, err.Error()}
