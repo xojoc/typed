@@ -92,14 +92,6 @@ func (a *Article) Title() string {
 		}
 	}
 	return fmt.Sprint(a.ID)
-	/*
-		z := strings.SplitN(a.Markdown, "#", 2)
-		if len(z) == 1 {
-			return fmt.Sprint(a.ID)
-		}
-		z = strings.SplitN(z[1], "\n", 2)
-		return strings.TrimLeft(z[0], `# `)
-	*/
 }
 
 func (a *Article) ToHTML() (htpl.HTML, error) {
@@ -154,10 +146,10 @@ func errorHandler(h myHandler) http.HandlerFunc {
 func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	p := r.URL.Path
 	switch {
-	case p == "" || p == "/":
-		http.Redirect(w, r, "/index.html", http.StatusMovedPermanently)
+	case p == "/index.html" || p == "/":
+		http.Redirect(w, r, "", http.StatusMovedPermanently)
 		return nil
-	case p == "/index.html":
+	case p == "":
 		err := templates.ExecuteTemplate(w, "index.html", nil)
 		if err != nil {
 			return &NetError{500, err.Error()}

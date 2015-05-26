@@ -26,6 +26,7 @@ a {
 textarea {
     width: 100%;
     min-height: 200px;
+    margin: 20px 0;
 }
 footer {
     margin-top: 50px;
