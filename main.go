@@ -23,6 +23,7 @@ import (
 
 const (
 	gzipThreshold = 200
+	postLimit     = 15000
 )
 
 func init() {
@@ -201,6 +202,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 		return nil
 	} else if r.Method == "POST" {
+		r.Body = http.MaxBytesReader(w, r.Body, limitPost)
 		r.ParseForm()
 		p := ""
 		s := ""
