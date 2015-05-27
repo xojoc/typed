@@ -55,10 +55,12 @@ footer {
 footer a {
     margin-right: 20px;
 }
-#indexnew {
+#createbutton {
     display: block;
     text-align: center;
     font-size: 36px;
     margin-top: 20px;
     background-color: #cfcfcf;
+    border-radius: 13px;
+    border: 4px solid #bbb;
 }
