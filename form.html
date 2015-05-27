@@ -1,8 +1,8 @@
 {{template "header.html"}}
 
 <form method=post action="{{if .}}{{.EditPath}}{{else}}/new{{end}}">
-  <p>You can use <a href="http://typed.pw/a/10" title="Markdown tutorial">Markdown</a> to format the article.</p>
-  <p><a href="http://typed.pw/a/11" title="Article ideas">Need an idea?</a></p>
+  <p>You can use <a href="http://typed.pw/a/11" title="Markdown tutorial">Markdown</a> to format the article.</p>
+  <p><a href="http://typed.pw/a/12" title="Article ideas">Need an idea?</a></p>
   <p>
     <textarea name=newbody placeholder="Awesome article" autofocus required>{{if .}}{{.Markdown}}{{end}}</textarea>
   </p>
