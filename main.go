@@ -202,7 +202,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 		return nil
 	} else if r.Method == "POST" {
-		r.Body = http.MaxBytesReader(w, r.Body, limitPost)
+		r.Body = http.MaxBytesReader(w, r.Body, postLimit)
 		r.ParseForm()
 		p := ""
 		s := ""
