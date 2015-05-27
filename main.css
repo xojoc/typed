@@ -30,9 +30,6 @@ h6 {
 p {
     margin-bottom: 10px;
 }
-p, blockquote, li {
-    font-size: 20px;
-}
 img {
     max-width: 100%;
 }
@@ -45,6 +42,12 @@ textarea {
     width: 100%;
     min-height: 200px;
     margin: 20px 0;
+}
+blockquote {
+    border-left: 5px solid lightblue;
+    border-radius: 15px;
+    padding: 7px;
+    background-color: #ddd;
 }
 footer {
     margin-top: 50px;
