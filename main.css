@@ -30,6 +30,9 @@ h6 {
 p {
     margin-bottom: 10px;
 }
+p, blockquote, li {
+    font-size: 18px;
+}
 img {
     max-width: 100%;
 }
@@ -49,7 +52,6 @@ footer {
 footer a {
     margin-right: 20px;
 }
-
 #indexnew {
     display: block;
     text-align: center;
