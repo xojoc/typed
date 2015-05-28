@@ -52,8 +52,13 @@ blockquote {
 footer {
     margin-top: 50px;
 }
-footer a {
-    margin-right: 20px;
+footer p {
+    text-align: justify;
+}
+footer p:after {
+    content: '';
+    width: 100%;
+    display: inline-block;
 }
 #createbutton {
     display: block;
