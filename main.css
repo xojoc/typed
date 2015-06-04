@@ -70,3 +70,6 @@ footer p:after {
     border-radius: 13px;
     border: 4px solid #bbb;
 }
+#newpassword {
+    width: 100%;
+}
