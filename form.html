@@ -12,10 +12,10 @@
   <p>Set a password if you want to edit the article later.</p>
   {{end}}
   <p>
-    <input name=newpassword type=password placeholder="Password{{if not .}} (optional){{end}}">
+    <input id=newpassword name=newpassword type=password placeholder="Password{{if not .}} (optional){{end}}">
   </p>
   <p>
-    <input id=newpassword type=submit value={{if .}}Edit{{else}}Publish{{end}}>
+    <input type=submit value={{if .}}Edit{{else}}Publish{{end}}>
   </p>
 </form>
 
