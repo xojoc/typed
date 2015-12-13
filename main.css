@@ -42,6 +42,7 @@ textarea {
     width: 100%;
     min-height: 200px;
     margin: 20px 0;
+    font-size: 20px;
 }
 blockquote {
     border-left: 5px solid lightblue;
@@ -72,4 +73,8 @@ footer p:after {
 }
 #newpassword {
     width: 100%;
+}
+.promotion {
+    color: brown;
+    font-weight: 700;
 }
