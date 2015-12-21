@@ -158,10 +158,12 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			return &NetError{500, err.Error()}
 		}
 		return nil
-	default: /* Static files */
+	case p == "/main.css" || p == "/favicon.ico":
 		w.Header().Add("Cache-Control", "max-age=604800, public")
 		http.ServeFile(w, r, "."+p)
 		return nil
+	default:
+		return &NetError{404, "not found"}
 	}
 	return nil
 }
@@ -286,7 +288,6 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 
 		r.ParseForm()
 		if a.Password == "" || hashPassword(r.PostForm.Get("newpassword"), a.Salt) != a.Password {
-			fmt.Print("401")
 			return &NetError{401, "wrong password"}
 		}
 		g := false
