@@ -6,8 +6,6 @@ import (
 	"crypto/sha512"
 	"database/sql"
 	"fmt"
-	"github.com/facebookgo/grace/gracehttp"
-	"github.com/twinj/uuid"
 	htpl "html/template"
 	"io"
 	"io/ioutil"
@@ -19,11 +17,14 @@ import (
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/facebookgo/grace/gracehttp"
+	"github.com/twinj/uuid"
 )
 
 const (
 	gzipThreshold = 200
-	postLimit     = 15000
+	postLimit     = 30000
 )
 
 func init() {
@@ -97,7 +98,7 @@ func (a *Article) Title() string {
 
 func (a *Article) ToHTML() (htpl.HTML, error) {
 	var err error
-//	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
+	//	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
 	c := exec.Command("pandoc", "-t", "html5", "-S")
 	r := strings.NewReader(a.Markdown)
 	c.Stdin = r
@@ -337,7 +338,5 @@ func main() {
 	http.Handle("/new", errorHandler(newHandler))
 	http.HandleFunc("/a/", errorHandler(aHandler))
 	http.HandleFunc("/edit/", errorHandler(editHandler))
-	//	http.Handle("/html/", http.FileServer(http.Dir(".")))
-	//	http.Handle("/md/", http.FileServer(http.Dir(".")))
 	gracehttp.Serve(&http.Server{Addr: p})
 }
