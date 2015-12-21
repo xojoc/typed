@@ -98,8 +98,8 @@ func (a *Article) Title() string {
 
 func (a *Article) ToHTML() (htpl.HTML, error) {
 	var err error
-	//	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
-	c := exec.Command("pandoc", "-t", "html5", "-S")
+	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
+	//	c := exec.Command("pandoc", "-t", "html5", "-S")
 	r := strings.NewReader(a.Markdown)
 	c.Stdin = r
 	h, err := c.Output()
