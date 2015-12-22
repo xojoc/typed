@@ -2,20 +2,20 @@
 
 <form method=post action="{{if .}}{{.EditPath}}{{else}}/new{{end}}">
   <p>You can use <a href="http://typed.pw/a/11" title="Markdown tutorial">Markdown</a> to format the article.</p>
-  <p><a href="http://typed.pw/a/12" title="Article ideas">Need an idea?</a></p>
+  <p><a href="http://typed.pw/a/12" title="Article ideas">Need an idea? 💡</a></p>
   <p>
-    <textarea name=newbody placeholder="Awesome article" required>{{if .}}{{.Markdown}}{{end}}</textarea>
+    <textarea name=newbody placeholder="Awesome article ✍" required>{{if .}}{{.Markdown}}{{end}}</textarea>
   </p>
   {{if .}}
-  <p>Please enter your password to edit the article.</p>
+  <p>Please enter your password to update the article.</p>
   {{else}}
-  <p>[Optional] Set a password if you want to edit the article later.</p>
+  <p>[Optional] Set a password if you want to update the article later.</p>
   {{end}}
   <p>
-    <input id=newpassword name=newpassword type=password placeholder="Password{{if not .}} (optional){{end}}">
+    <input id=newpassword name=newpassword type=password placeholder="Password{{if not .}} (optional){{end}} 🔑">
   </p>
   <p>
-    <input type=submit value={{if .}}Edit{{else}}Publish{{end}}>
+    <input type=submit value={{if .}}Update{{else}}Publish{{end}}>
   </p>
 </form>
 

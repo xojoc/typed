@@ -1,31 +1,30 @@
 * { margin: 0; }
 body {
-    max-width: 600px;
+    max-width: 640px;
     margin: 20px auto;
     padding: 0 25px;
 
-    font-family: sans-serif;
-    font-size: 20px;
+    font-size: 24px;
 
     background-color: #eaeaea;
 }
 h1 {
-    font-size: 30px;
+    font-size: 34px;
 }
 h2 {
-    font-size: 28px;
+    font-size: 32px;
 }
 h3 {
-    font-size: 26px;
+    font-size: 30px;
 }
 h4 {
-    font-size: 24px;
+    font-size: 28px;
 }
 h5 {
-    font-size: 22px;
+    font-size: 26px;
 }
 h6 {
-    font-size: 20px;
+    font-size: 24px;
 }
 p {
     margin-bottom: 10px;
@@ -35,14 +34,14 @@ img {
 }
 a {
     text-decoration: none;
-    color: green;
+    color: #1E7770;
     font-weight: 700;
 }
 textarea {
     width: 100%;
-    min-height: 200px;
+    min-height: 400px;
     margin: 20px 0;
-    font-size: 20px;
+    font-size: 22px;
 }
 blockquote {
     border-left: 5px solid lightblue;
