@@ -189,10 +189,10 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	w.Header().Add("Cache-Control", "no-cache")
 	w.Header().Add("ETag", fmt.Sprint(a.ETag))
 	if r.Header.Get("If-None-Match") == fmt.Sprint(a.ETag) {
-		fmt.Println("equal")
+		log.Println("equal")
 		return &NetError{304, ""}
 	} else {
-		fmt.Println("not equal ", r.Header.Get("If-None-Match"), fmt.Sprint(a.ETag))
+		log.Println("not equal ", r.Header.Get("If-None-Match"), fmt.Sprint(a.ETag))
 	}
 	err = templates.ExecuteTemplate(w, "a.html", a)
 	if err != nil {
