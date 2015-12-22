@@ -265,7 +265,11 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 				return &NetError{500, err.Error()}
 			}
 		}
-
+		w.Header().Add("Cache-Control", "no-cache")
+		w.Header().Add("ETag", fmt.Sprint(a.ETag))
+		if r.Header.Get("If-None-Match") == fmt.Sprint(a.ETag) {
+			return &NetError{304, ""}
+		}
 		err = templates.ExecuteTemplate(w, "form.html", a)
 		if err != nil {
 			return &NetError{500, err.Error()}
