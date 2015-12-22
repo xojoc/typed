@@ -2,3 +2,6 @@ language: go
 
 go:
   - 1.5
+
+deploy:
+  skip_cleanup: true
