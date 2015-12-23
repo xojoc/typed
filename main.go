@@ -187,8 +187,7 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 	}
 	w.Header().Add("Cache-Control", "no-cache")
-	w.Header().Add("ETag", fmt.Sprint(a.ETag))
-	log.Println(r)
+	w.Header().Add("ETag", fmt.Printf(`"%d"`, a.ETag))
 	if r.Header.Get("If-None-Match") == fmt.Sprint(a.ETag) {
 		return &NetError{304, ""}
 	}
