@@ -1,3 +1,5 @@
+// Written by http://xojoc.pw. Public Domain.
+
 package main
 
 import (
@@ -22,6 +24,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/twinj/uuid"
+	"gitlab.com/xojoc/util"
 )
 
 const (
@@ -30,6 +33,20 @@ const (
 )
 
 var notFound = errors.New("not found")
+
+var boltdb *bolt.DB
+
+func init() {
+	var err error
+	boltdb, err = bolt.Open("articles.bolt", 0600, nil)
+	util.Fatal(err)
+
+	boltdb.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("articles"))
+		util.Fatal(err)
+		return nil
+	})
+}
 
 func init() {
 	log.SetFlags(log.Lshortfile)
