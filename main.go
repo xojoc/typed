@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/sha512"
-	"database/sql"
+	"encoding/gob"
+	"errors"
 	"fmt"
 	htpl "html/template"
 	"io"
@@ -18,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/boltdb/bolt"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/twinj/uuid"
 )
@@ -26,6 +28,8 @@ const (
 	gzipThreshold = 200
 	postLimit     = 30000
 )
+
+var notFound = errors.New("not found")
 
 func init() {
 	log.SetFlags(log.Lshortfile)
@@ -61,29 +65,37 @@ func (a *Article) EditPath() string {
 }
 
 func getArticleByID(id uint64) (*Article, error) {
-	a := &Article{}
-	err := DB.QueryRow(`select Password, Salt, Markdown, Gziped, ETag from articles where ID=?;`, id).Scan(&a.Password, &a.Salt, &a.Markdown, &a.Gziped, &a.ETag)
-	if err != nil {
-		return nil, err
-	}
-	if a.Gziped {
-		gz, err := gzip.NewReader(strings.NewReader(a.Markdown))
-		if err != nil {
-			return nil, err
+	var a Article
+	return &a, boltdb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("articles"))
+		v := b.Get([]byte(fmt.Sprint(id)))
+		if v == nil {
+			return notFound
 		}
-		b, err := ioutil.ReadAll(gz)
+		dec := gob.NewDecoder(bytes.NewBuffer(v))
+		err := dec.Decode(&a)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		err = gz.Close()
-		if err != nil {
-			return nil, err
+		if a.Gziped {
+			gz, err := gzip.NewReader(strings.NewReader(a.Markdown))
+			if err != nil {
+				return err
+			}
+			b, err := ioutil.ReadAll(gz)
+			if err != nil {
+				return err
+			}
+			err = gz.Close()
+			if err != nil {
+				return err
+			}
+			a.Markdown = string(b)
+			a.Gziped = false
 		}
-		a.Markdown = string(b)
-		a.Gziped = false
-	}
-	a.ID = id
-	return a, err
+		a.ID = id
+		return nil
+	})
 }
 
 func (a *Article) Title() string {
@@ -99,7 +111,6 @@ func (a *Article) Title() string {
 func (a *Article) ToHTML() (htpl.HTML, error) {
 	var err error
 	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
-	//	c := exec.Command("pandoc", "-t", "html5", "-S")
 	r := strings.NewReader(a.Markdown)
 	c.Stdin = r
 	h, err := c.Output()
@@ -168,6 +179,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	return nil
 }
 
+func eqETag(a string, b uint64) bool {
+	return strings.TrimPrefix(a, `W/`) == fmt.Sprintf(`"%d"`, b)
+}
+
 func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	idstr := r.URL.Path[len("/a/"):]
 	if idstr == "" {
@@ -180,7 +195,8 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	}
 	a, err := getArticleByID(id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		//		if err == sql.ErrNoRows {
+		if err == notFound {
 			return &NetError{404, err.Error()}
 		} else {
 			return &NetError{500, err.Error()}
@@ -188,7 +204,7 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	}
 	w.Header().Add("Cache-Control", "no-cache")
 	w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
-	if r.Header.Get("If-None-Match") == fmt.Sprint(a.ETag) {
+	if eqETag(r.Header.Get("If-None-Match"), a.ETag) {
 		return &NetError{304, ""}
 	}
 	err = templates.ExecuteTemplate(w, "a.html", a)
@@ -230,15 +246,26 @@ func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			}
 			m = b.String()
 		}
-		res, err := DB.Exec(`INSERT INTO articles (Password, Salt, Markdown, Gziped, ETag) VALUES(?,?,?,?,0);`, p, s, m, g)
+		var a Article
+		a.Password = p
+		a.Salt = s
+		a.Markdown = m
+		a.Gziped = g
+		a.ETag = 0
+		err := boltdb.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("articles"))
+			a.ID, _ = b.NextSequence()
+			var buf bytes.Buffer
+			enc := gob.NewEncoder(&buf)
+			err := enc.Encode(&a)
+			if err != nil {
+				return err
+			}
+			return b.Put([]byte(fmt.Sprint(a.ID)), buf.Bytes())
+		})
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			return &NetError{500, err.Error()}
-		}
-		a := &Article{ID: uint64(id)}
 		http.Redirect(w, r, a.AbsPath(), http.StatusSeeOther)
 	} else {
 		return &NetError{500, "can't handle verb"}
@@ -259,15 +286,15 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 		a, err := getArticleByID(id)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == notFound {
 				return &NetError{404, err.Error()}
 			} else {
 				return &NetError{500, err.Error()}
 			}
 		}
 		w.Header().Add("Cache-Control", "no-cache")
-		w.Header().Add("ETag", fmt.Sprint(a.ETag))
-		if r.Header.Get("If-None-Match") == fmt.Sprint(a.ETag) {
+		w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
+		if eqETag(r.Header.Get("If-None-Match"), a.ETag) {
 			return &NetError{304, ""}
 		}
 		err = templates.ExecuteTemplate(w, "form.html", a)
@@ -310,7 +337,19 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			}
 			m = b.String()
 		}
-		_, err = DB.Exec(`update articles set Markdown=?, Gziped=?, ETag=? where id=?;`, m, g, a.ETag+1, a.ID)
+		a.Markdown = m
+		a.Gziped = g
+		a.ETag += 1
+		err = boltdb.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("articles"))
+			var buf bytes.Buffer
+			enc := gob.NewEncoder(&buf)
+			err := enc.Encode(&a)
+			if err != nil {
+				return err
+			}
+			return b.Put([]byte(fmt.Sprint(a.ID)), buf.Bytes())
+		})
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}

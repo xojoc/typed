@@ -1,51 +1,20 @@
 package main
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
-	"log"
-	"os"
+	"github.com/boltdb/bolt"
+	"gitlab.com/xojoc/util"
 )
 
-var DB *sql.DB
-
-const DBname string = "articles.db"
-
-func fileexists(n string) bool {
-	_, err := os.Stat(n)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
+var boltdb *bolt.DB
 
 func init() {
-	exists := fileexists(DBname)
 	var err error
-	DB, err = sql.Open("sqlite3", DBname)
-	if err != nil {
-		log.Fatal(err)
-	}
+	boltdb, err = bolt.Open("articles.bolt", 0600, nil)
+	util.Fatal(err)
 
-	if !exists {
-		articles := `create table Articles
-(ID integer not null,
- Password text not null,
- Salt string not null,
- Markdown string not null,
- Gziped boolean not null,
- Etag integer not null,
- primary key(ID));`
-
-		_, err = DB.Exec(articles)
-		if err != nil {
-			os.Remove(DBname)
-			log.Fatal(err)
-		}
-	}
-
-	err = DB.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
+	boltdb.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("articles"))
+		util.Fatal(err)
+		return nil
+	})
 }
