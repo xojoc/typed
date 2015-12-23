@@ -13,11 +13,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mime"
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"strconv"
 	"strings"
 
@@ -181,7 +179,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 		return nil
 	case p == "/":
-		err := templates.ExecuteTemplate(w, "index.html", nil)
+		n := 0
+		err := boltdb.View(func(tx *bolt.Tx) error {
+			n = tx.Bucket([]byte("articles")).Stats().KeyN
+			return nil
+		})
+		if err != nil {
+			return &NetError{500, err.Error()}
+		}
+		err = templates.ExecuteTemplate(w, "index.html", &n)
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}
@@ -378,19 +384,6 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		http.Redirect(w, r, a.AbsPath()+"?etag="+fmt.Sprint(a.ETag), http.StatusSeeOther)
 	} else {
 		return &NetError{500, "can't handle verb"}
-	}
-	return nil
-}
-
-func staticHandler(w http.ResponseWriter, r *http.Request) *NetError {
-	f, err := os.Open(r.URL.Path)
-	if err != nil {
-		return &NetError{404, err.Error()}
-	}
-	w.Header().Set("Content-Type", mime.TypeByExtension(path.Ext(r.URL.Path)))
-	_, err = io.Copy(w, f)
-	if err != nil {
-		return &NetError{500, err.Error()}
 	}
 	return nil
 }
