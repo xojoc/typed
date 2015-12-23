@@ -179,8 +179,13 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	return nil
 }
 
-func eqETag(a string, b uint64) bool {
-	return strings.TrimPrefix(a, `W/`) == fmt.Sprintf(`"%d"`, b)
+func isCached(r *http.Request, a *Article) bool {
+	for _, s := range r.Header["Cache-Control"] {
+		if s == "max-age=0" {
+			return false
+		}
+	}
+	return strings.TrimPrefix(r.Header.Get("If-None-Match"), "W/") == fmt.Sprintf(`"%d"`, a.ETag)
 }
 
 func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
@@ -195,18 +200,18 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	}
 	a, err := getArticleByID(id)
 	if err != nil {
-		//		if err == sql.ErrNoRows {
 		if err == notFound {
 			return &NetError{404, err.Error()}
 		} else {
 			return &NetError{500, err.Error()}
 		}
 	}
-	w.Header().Add("Cache-Control", "no-cache")
-	w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
-	if eqETag(r.Header.Get("If-None-Match"), a.ETag) {
-		return &NetError{304, ""}
-	}
+	w.Header().Add("Cache-Control", "public, max-age=3600") // one hour
+	//	w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
+	log.Println(r)
+	//	if isCached(r, a) {
+	//		return &NetError{304, ""}
+	//	}
 	err = templates.ExecuteTemplate(w, "a.html", a)
 	if err != nil {
 		return &NetError{500, err.Error()}
@@ -292,9 +297,9 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 				return &NetError{500, err.Error()}
 			}
 		}
-		w.Header().Add("Cache-Control", "no-cache")
+		w.Header().Add("Cache-Control", "public, no-cache")
 		w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
-		if eqETag(r.Header.Get("If-None-Match"), a.ETag) {
+		if isCached(r, a) {
 			return &NetError{304, ""}
 		}
 		err = templates.ExecuteTemplate(w, "form.html", a)
@@ -353,7 +358,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}
-		http.Redirect(w, r, a.AbsPath(), http.StatusSeeOther)
+		http.Redirect(w, r, a.AbsPath()+"?etag="+fmt.Sprint(a.ETag), http.StatusSeeOther)
 	} else {
 		return &NetError{500, "can't handle verb"}
 	}
