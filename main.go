@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/boltdb/bolt"
+	"github.com/dustin/go-humanize"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/twinj/uuid"
 	"gitlab.com/xojoc/util"
@@ -187,7 +188,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}
-		err = templates.ExecuteTemplate(w, "index.html", &n)
+		err = templates.ExecuteTemplate(w, "index.html", humanize.Comma(int64(n)))
 		if err != nil {
 			return &NetError{500, err.Error()}
 		}
@@ -231,7 +232,6 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	}
 	w.Header().Add("Cache-Control", "public, max-age=3600") // one hour
 	//	w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
-	log.Println(r)
 	//	if isCached(r, a) {
 	//		return &NetError{304, ""}
 	//	}

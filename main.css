@@ -88,3 +88,21 @@ footer p:after {
     margin-top: 50px;
     font-size: 30px;
 }
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+}
+table, th, td {
+	border: 1px solid black;
+}
+th, td {
+	padding: 7px 4px;
+}
+tr:hover {
+	background-color: lightblue;
+}
+th {
+	background-color: green;
+	color: white;
+}
