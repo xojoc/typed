@@ -15,13 +15,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/dustin/go-humanize"
 	"github.com/facebookgo/grace/gracehttp"
+	"github.com/golang-commonmark/markdown"
 	"github.com/twinj/uuid"
 	"gitlab.com/xojoc/util"
 )
@@ -125,15 +125,8 @@ func (a *Article) Title() string {
 }
 
 func (a *Article) ToHTML() (htpl.HTML, error) {
-	var err error
-	c := exec.Command("pandoc", "-f", "markdown-raw_html", "-t", "html5", "-S")
-	r := strings.NewReader(a.Markdown)
-	c.Stdin = r
-	h, err := c.Output()
-	if err != nil {
-		return htpl.HTML(""), err
-	}
-	return htpl.HTML(h), nil
+	md := markdown.New()
+	return htpl.HTML(md.RenderToString([]byte(a.Markdown))), nil
 }
 
 type myHandler func(http.ResponseWriter, *http.Request) *NetError
