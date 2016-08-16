@@ -1,4 +1,4 @@
-// Written by http://xojoc.pw. Public Domain.
+// Written by https://xojoc.pw. Public Domain.
 
 package main
 
@@ -31,7 +31,7 @@ const (
 	postLimit     = 30000
 )
 
-var notFound = errors.New("not found")
+var errNotFound = errors.New("not found")
 
 var boltdb *bolt.DB
 
@@ -68,7 +68,7 @@ type Article struct {
 	ETag     uint64
 }
 
-type NetError struct {
+type netError struct {
 	Code    int
 	Message string
 }
@@ -86,7 +86,7 @@ func getArticleByID(id uint64) (*Article, error) {
 		b := tx.Bucket([]byte("articles"))
 		v := b.Get([]byte(fmt.Sprint(id)))
 		if v == nil {
-			return notFound
+			return errNotFound
 		}
 		dec := gob.NewDecoder(bytes.NewBuffer(v))
 		err := dec.Decode(&a)
@@ -129,7 +129,7 @@ func (a *Article) ToHTML() (htpl.HTML, error) {
 	return htpl.HTML(md.RenderToString([]byte(a.Markdown))), nil
 }
 
-type myHandler func(http.ResponseWriter, *http.Request) *NetError
+type myHandler func(http.ResponseWriter, *http.Request) *netError
 
 func hashPassword(p string, salt string) string {
 	if p == "" {
@@ -166,7 +166,7 @@ func errorHandler(h myHandler) http.HandlerFunc {
 	}
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
+func rootHandler(w http.ResponseWriter, r *http.Request) *netError {
 	p := r.URL.Path
 	switch {
 	case p == "/index.html" || p == "":
@@ -179,11 +179,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			return nil
 		})
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		err = templates.ExecuteTemplate(w, "index.html", humanize.Comma(int64(n)))
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		return nil
 	case p == "/main.css" || p == "/favicon.ico":
@@ -191,9 +191,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		http.ServeFile(w, r, "."+p)
 		return nil
 	default:
-		return &NetError{404, "not found"}
+		return &netError{404, "not found"}
 	}
-	return nil
 }
 
 func isCached(r *http.Request, a *Article) bool {
@@ -205,7 +204,7 @@ func isCached(r *http.Request, a *Article) bool {
 	return strings.TrimPrefix(r.Header.Get("If-None-Match"), "W/") == fmt.Sprintf(`"%d"`, a.ETag)
 }
 
-func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
+func aHandler(w http.ResponseWriter, r *http.Request) *netError {
 	idstr := r.URL.Path[len("/a/"):]
 	if idstr == "" {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
@@ -213,14 +212,14 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	}
 	id, err := strconv.ParseUint(idstr, 10, 64)
 	if err != nil {
-		return &NetError{404, err.Error()}
+		return &netError{404, err.Error()}
 	}
 	a, err := getArticleByID(id)
 	if err != nil {
-		if err == notFound {
-			return &NetError{404, err.Error()}
+		if err == errNotFound {
+			return &netError{404, err.Error()}
 		} else {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 	}
 	w.Header().Add("Cache-Control", "public, max-age=3600") // one hour
@@ -230,16 +229,16 @@ func aHandler(w http.ResponseWriter, r *http.Request) *NetError {
 	//	}
 	err = templates.ExecuteTemplate(w, "a.html", a)
 	if err != nil {
-		return &NetError{500, err.Error()}
+		return &netError{500, err.Error()}
 	}
 	return nil
 }
 
-func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
+func newHandler(w http.ResponseWriter, r *http.Request) *netError {
 	if r.Method == "GET" {
 		err := templates.ExecuteTemplate(w, "form.html", nil)
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		return nil
 	} else if r.Method == "POST" {
@@ -259,11 +258,11 @@ func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			gz, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
 			_, err := io.WriteString(gz, m)
 			if err != nil {
-				return &NetError{500, err.Error()}
+				return &netError{500, err.Error()}
 			}
 			err = gz.Close()
 			if err != nil {
-				return &NetError{500, err.Error()}
+				return &netError{500, err.Error()}
 			}
 			m = b.String()
 		}
@@ -285,16 +284,16 @@ func newHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			return b.Put([]byte(fmt.Sprint(a.ID)), buf.Bytes())
 		})
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		http.Redirect(w, r, a.AbsPath(), http.StatusSeeOther)
 	} else {
-		return &NetError{500, "can't handle verb"}
+		return &netError{500, "can't handle verb"}
 	}
 	return nil
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
+func editHandler(w http.ResponseWriter, r *http.Request) *netError {
 	if r.Method == "GET" {
 		idstr := r.URL.Path[len("/edit/"):]
 		if idstr == "" {
@@ -303,24 +302,24 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 		id, err := strconv.ParseUint(idstr, 10, 64)
 		if err != nil {
-			return &NetError{404, err.Error()}
+			return &netError{404, err.Error()}
 		}
 		a, err := getArticleByID(id)
 		if err != nil {
-			if err == notFound {
-				return &NetError{404, err.Error()}
+			if err == errNotFound {
+				return &netError{404, err.Error()}
 			} else {
-				return &NetError{500, err.Error()}
+				return &netError{500, err.Error()}
 			}
 		}
 		w.Header().Add("Cache-Control", "public, no-cache")
 		w.Header().Add("ETag", fmt.Sprintf(`"%d"`, a.ETag))
 		if isCached(r, a) {
-			return &NetError{304, ""}
+			return &netError{304, ""}
 		}
 		err = templates.ExecuteTemplate(w, "form.html", a)
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		return nil
 	} else if r.Method == "POST" {
@@ -331,16 +330,16 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 		}
 		id, err := strconv.ParseUint(idstr, 10, 64)
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		a, err := getArticleByID(id)
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 
 		r.ParseForm()
 		if a.Password == "" || hashPassword(r.PostForm.Get("newpassword"), a.Salt) != a.Password {
-			return &NetError{401, "wrong password"}
+			return &netError{401, "wrong password"}
 		}
 		g := false
 		m := r.PostForm.Get("newbody")
@@ -348,13 +347,13 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			g = true
 			var b bytes.Buffer
 			gz, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
-			_, err := io.WriteString(gz, m)
+			_, err = io.WriteString(gz, m)
 			if err != nil {
-				return &NetError{500, err.Error()}
+				return &netError{500, err.Error()}
 			}
 			err = gz.Close()
 			if err != nil {
-				return &NetError{500, err.Error()}
+				return &netError{500, err.Error()}
 			}
 			m = b.String()
 		}
@@ -365,18 +364,18 @@ func editHandler(w http.ResponseWriter, r *http.Request) *NetError {
 			b := tx.Bucket([]byte("articles"))
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
-			err := enc.Encode(&a)
+			err = enc.Encode(&a)
 			if err != nil {
 				return err
 			}
 			return b.Put([]byte(fmt.Sprint(a.ID)), buf.Bytes())
 		})
 		if err != nil {
-			return &NetError{500, err.Error()}
+			return &netError{500, err.Error()}
 		}
 		http.Redirect(w, r, a.AbsPath()+"?etag="+fmt.Sprint(a.ETag), http.StatusSeeOther)
 	} else {
-		return &NetError{500, "can't handle verb"}
+		return &netError{500, "can't handle verb"}
 	}
 	return nil
 }
