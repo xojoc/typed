@@ -17,6 +17,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/dustin/go-humanize"
@@ -37,7 +38,7 @@ var boltdb *bolt.DB
 
 func init() {
 	var err error
-	boltdb, err = bolt.Open("articles.bolt", 0600, nil)
+	boltdb, err = bolt.Open("articles.bolt", 0600, &bolt.Options{Timeout: 1 * time.Second})
 	util.Fatal(err)
 
 	boltdb.Update(func(tx *bolt.Tx) error {
@@ -390,4 +391,5 @@ func main() {
 	http.HandleFunc("/a/", errorHandler(aHandler))
 	http.HandleFunc("/edit/", errorHandler(editHandler))
 	gracehttp.Serve(&http.Server{Addr: p})
+	util.Fatal(boltdb.Close())
 }
