@@ -1,1 +1,1 @@
-The code behind <http://typed.pw>.
+The code behind <https://typed.pw>.
