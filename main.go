@@ -374,7 +374,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) *netError {
 		if err != nil {
 			return &netError{500, err.Error()}
 		}
-		http.Redirect(w, r, a.AbsPath()+"?etag="+fmt.Sprint(a.ETag), http.StatusSeeOther)
+		http.Redirect(w, r, a.AbsPath(), http.StatusSeeOther)
 	} else {
 		return &netError{500, "can't handle verb"}
 	}

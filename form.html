@@ -1,10 +1,11 @@
 {{template "header.html"}}
 
+
 <form method=post action="{{if .}}{{.EditPath}}{{else}}/new{{end}}">
   <p>You can use <a href="http://typed.pw/a/11" title="Markdown tutorial">Markdown</a> to format the article.</p>
   <p><a href="http://typed.pw/a/12" title="Article ideas">Need an idea? 💡</a></p>
   <p>
-    <textarea name=newbody placeholder="Awesome article ✍" required>{{if .}}{{.Markdown}}{{end}}</textarea>
+    <textarea name=newbody id=newbody placeholder="Awesome article ✍" required autofocus>{{if .}}{{.Markdown}}{{end}}</textarea>
   </p>
   {{if .}}
   <p>Please enter your password to update the article.</p>
@@ -18,5 +19,20 @@
     <input type=submit value={{if .}}Update{{else}}Publish{{end}}>
   </p>
 </form>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+<script>
+  var simplemde = new SimpleMDE({
+  autoDownloadFontAwesome: true,
+  autofocus: true,
+  promptURLs: true,
+  element: document.getElementById("newbody"),
+  hideIcons: ["guide"],
+  
+  });
+</script>
 
 {{template "footer.html"}}
