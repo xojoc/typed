@@ -41,11 +41,11 @@ func init() {
 	boltdb, err = bolt.Open("articles.bolt", 0600, &bolt.Options{Timeout: 1 * time.Second})
 	util.Fatal(err)
 
-	boltdb.Update(func(tx *bolt.Tx) error {
+	err = boltdb.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("articles"))
-		util.Fatal(err)
-		return nil
+		return err
 	})
+	util.Fatal(err)
 }
 
 func init() {
@@ -58,7 +58,7 @@ func init() {
 	}
 }
 
-var templates = htpl.Must(htpl.New("").Funcs(htpl.FuncMap{}).ParseGlob("*.html"))
+var templates = htpl.Must(htpl.ParseGlob("*.html"))
 
 type Article struct {
 	ID       uint64
