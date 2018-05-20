@@ -24,7 +24,7 @@ import (
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/golang-commonmark/markdown"
 	"github.com/twinj/uuid"
-	"gitlab.com/xojoc/util"
+	"xojoc.pw/must"
 )
 
 const (
@@ -39,18 +39,18 @@ var boltdb *bolt.DB
 func init() {
 	var err error
 	boltdb, err = bolt.Open("articles.bolt", 0600, &bolt.Options{Timeout: 1 * time.Second})
-	util.Fatal(err)
+	must.OK(err)
 
 	err = boltdb.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("articles"))
 		return err
 	})
-	util.Fatal(err)
+	must.OK(err)
 }
 
 func init() {
 	log.SetFlags(log.Lshortfile)
-	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		log.Print(err)
 	} else {
@@ -391,5 +391,5 @@ func main() {
 	http.HandleFunc("/a/", errorHandler(aHandler))
 	http.HandleFunc("/edit/", errorHandler(editHandler))
 	gracehttp.Serve(&http.Server{Addr: p})
-	util.Fatal(boltdb.Close())
+	must.OK(boltdb.Close())
 }
